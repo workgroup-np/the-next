@@ -6,7 +6,7 @@
  *
  * @package thenext
  */
-
+global $next_options;
 if ( ! function_exists( 'thenext_setup' ) ) :
 /**
  * Sets up theme defaults and registers support for various WordPress features.
@@ -106,6 +106,8 @@ function thenext_scripts() {
 	wp_enqueue_style( 'thenext-bootstrap-css', get_template_directory_uri().'/assets/css/bootstrap.min.css');
 
 	wp_enqueue_style( 'thenext-style', get_stylesheet_uri() );
+	wp_enqueue_style( 'next-primary-font', 'https://fonts.googleapis.com/css?family=Open+Sans:400,300,700', '', '' );
+	wp_enqueue_style( 'next-secondary-font', 'https://fonts.googleapis.com/css?family=Raleway:400,300,700', '', '' );
 
 	//include all js
 	wp_enqueue_script( 'jquery' );
@@ -166,3 +168,83 @@ require get_template_directory() . '/inc/customizer.php';
  * Load Jetpack compatibility file.
  */
 require get_template_directory() . '/inc/jetpack.php';
+require get_template_directory() . '/inc/navwalker.php';
+require get_template_directory() . '/inc/cmb2-details.php';
+
+if ( !isset( $redux_demo ) && file_exists( dirname( __FILE__ ) . '/options-config.php' ) ) {
+    require_once( dirname( __FILE__ ) . '/options-config.php' );
+}
+// Tgmpa
+add_action( 'tgmpa_register', 'next_register_required_plugins' );
+
+function next_register_required_plugins() {
+
+
+    $plugins = array(
+        array(
+            'name'      => 'CMB2',
+            'slug'       => 'cmb2',
+            'required'    => true,
+        ),
+        array(
+            'name'      => 'Redux-Framework',
+            'slug'       => 'redux-framework',
+            'required'    => true,
+        ),
+        array(
+            'name'      => 'MailChimp For Wordpress',
+            'slug'       => 'mailchimp-for-wp',
+            'required'    => true,
+        )
+    );
+
+    /**
+     * Array of configuration settings. Amend each line as needed.
+     * If you want the default strings to be available under your own theme domain,
+     * leave the strings uncommented.
+     * Some of the strings are added into a sprintf, so see the comments at the
+     * end of each line for what each argument will be.
+     */
+    $config = array(
+        'default_path' => '',                      // Default absolute path to pre-packaged plugins.
+        'menu'         => 'tgmpa-install-plugins', // Menu slug.
+        'has_notices'  => true,                    // Show admin notices or not.
+        'dismissable'  => true,                    // If false, a user cannot dismiss the nag message.
+        'dismiss_msg'  => '',                      // If 'dismissable' is false, this message will be output at top of nag.
+        'is_automatic' => false,                   // Automatically activate plugins after installation or not.
+        'message'      => '',                      // Message to output right before the plugins table.
+        'strings'      => array(
+            'page_title'                      => __( 'Install Required Plugins', 'next' ),
+            'menu_title'                      => __( 'Install Plugins', 'next' ),
+            'installing'                      => __( 'Installing Plugin: %s', 'next' ), // %s = plugin name.
+            'oops'                            => __( 'Something went wrong with the plugin API.', 'next' ),
+            'notice_can_install_required'     => _n_noop( 'This theme requires the following plugin: %1$s.', 'This theme requires the following plugins: %1$s.' , 'next'), // %1$s = plugin name(s).
+            'notice_can_install_recommended'  => _n_noop( 'This theme recommends the following plugin: %1$s.', 'This theme recommends the following plugins: %1$s.', 'next' ), // %1$s = plugin name(s).
+            'notice_cannot_install'           => _n_noop( 'Sorry, but you do not have the correct permissions to install the %s plugin. Contact the administrator of this site for help on getting the plugin installed.', 'Sorry, but you do not have the correct permissions to install the %s plugins. Contact the administrator of this site for help on getting the plugins installed.', 'next' ), // %1$s = plugin name(s).
+            'notice_can_activate_required'    => _n_noop( 'The following required plugin is currently inactive: %1$s.', 'The following required plugins are currently inactive: %1$s.', 'next' ), // %1$s = plugin name(s).
+            'notice_can_activate_recommended' => _n_noop( 'The following recommended plugin is currently inactive: %1$s.', 'The following recommended plugins are currently inactive: %1$s.', 'next' ), // %1$s = plugin name(s).
+            'notice_cannot_activate'          => _n_noop( 'Sorry, but you do not have the correct permissions to activate the %s plugin. Contact the administrator of this site for help on getting the plugin activated.', 'Sorry, but you do not have the correct permissions to activate the %s plugins. Contact the administrator of this site for help on getting the plugins activated.', 'next' ), // %1$s = plugin name(s).
+            'notice_ask_to_update'            => _n_noop( 'The following plugin needs to be updated to its latest version to ensure maximum compatibility with this theme: %1$s.', 'The following plugins need to be updated to their latest version to ensure maximum compatibility with this theme: %1$s.', 'next' ), // %1$s = plugin name(s).
+            'notice_cannot_update'            => _n_noop( 'Sorry, but you do not have the correct permissions to update the %s plugin. Contact the administrator of this site for help on getting the plugin updated.', 'Sorry, but you do not have the correct permissions to update the %s plugins. Contact the administrator of this site for help on getting the plugins updated.' , 'next'), // %1$s = plugin name(s).
+            'install_link'                    => _n_noop( 'Begin installing plugin', 'Begin installing plugins', 'next' ),
+            'activate_link'                   => _n_noop( 'Begin activating plugin', 'Begin activating plugins', 'next' ),
+            'return'                          => __( 'Return to Required Plugins Installer', 'next' ),
+            'plugin_activated'                => __( 'Plugin activated successfully.', 'next' ),
+            'complete'                        => __( 'All plugins installed and activated successfully. %s', 'next' ), // %s = dashboard link.
+            'nag_type'                        => 'updated' // Determines admin notice type - can only be 'updated', 'update-nag' or 'error'.
+        )
+    );
+
+    tgmpa( $plugins, $config );
+
+}
+// adding searh button in nav menu
+if($next_options['search']==1 && isset($next_options['search'])){
+	add_filter('wp_nav_menu_items','next_add_search_box_to_menu', 10, 2);
+}
+function next_add_search_box_to_menu( $items, $args ) {
+    if( $args->theme_location == 'primary' )
+        return $items.'<li class="hidden-xs"><span id="openSearch"><i class="icon icon-basic-magnifier black transition"></i></span></li>';
+
+    return $items;
+}
